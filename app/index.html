@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BuildAI — App</title>
+  <meta name="theme-color" content="#16a34a">
+  <link rel="stylesheet" href="../css/app.css">
+  <link rel="manifest" href="../manifest.json">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
+</head>
+<body>
+
+<!-- ─── Auth Screen ───────────────────────────────────────────────────────── -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">🏗️ BUILD<strong>AI</strong></div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="showTab('login')">Entrar</button>
+      <button class="auth-tab" onclick="showTab('register')">Registar</button>
+    </div>
+
+    <!-- Login -->
+    <div id="tab-login" class="auth-form">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="o@teu.email">
+      </div>
+      <div class="form-group">
+        <label>Palavra-passe</label>
+        <input type="password" id="login-pass" placeholder="••••••••">
+      </div>
+      <div id="login-error" class="auth-error"></div>
+      <button class="btn-auth" onclick="Auth.login()">Entrar</button>
+      <p class="auth-switch">Não tens conta? <a onclick="showTab('register')">Registar</a></p>
+    </div>
+
+    <!-- Register -->
+    <div id="tab-register" class="auth-form hidden">
+      <div class="form-group">
+        <label>Nome</label>
+        <input type="text" id="reg-name" placeholder="O teu nome">
+      </div>
+      <div class="form-group">
+        <label>Empresa (opcional)</label>
+        <input type="text" id="reg-company" placeholder="Nome da empresa">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="o@teu.email">
+      </div>
+      <div class="form-group">
+        <label>Palavra-passe</label>
+        <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div id="reg-error" class="auth-error"></div>
+      <button class="btn-auth" onclick="Auth.register()">Criar Conta Grátis</button>
+      <p class="auth-switch">Já tens conta? <a onclick="showTab('login')">Entrar</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ─── App ───────────────────────────────────────────────────────────────── -->
+<div id="app-screen" class="app-screen hidden">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">🏗️ BUILD<strong>AI</strong></div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" onclick="App.goto('dashboard')" data-page="dashboard">
+        <span>📊</span> Dashboard
+      </a>
+      <a class="nav-item" onclick="App.goto('projects')" data-page="projects">
+        <span>📋</span> Projetos
+      </a>
+      <a class="nav-item" onclick="App.goto('quotes')" data-page="quotes">
+        <span>📊</span> Orçamentos
+      </a>
+      <a class="nav-item" onclick="App.goto('invoices')" data-page="invoices">
+        <span>🧾</span> Faturas
+      </a>
+      <a class="nav-item" onclick="App.goto('clients')" data-page="clients">
+        <span>👥</span> Clientes
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="plan-badge-sidebar" id="plan-badge">Free</div>
+      <a class="nav-item" onclick="App.goto('settings')" data-page="settings">
+        <span>⚙️</span> Definições
+      </a>
+      <button class="btn-logout" onclick="Auth.logout()">Sair</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-wrap">
+    <header class="app-header">
+      <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <h1 id="page-title">Dashboard</h1>
+      <div class="app-header-right">
+        <span id="user-name-header"></span>
+        <div class="avatar" id="user-avatar">U</div>
+      </div>
+    </header>
+    <main id="app-main" class="app-main"></main>
+  </div>
+
+</div>
+
+<!-- ─── Modal ─────────────────────────────────────────────────────────────── -->
+<div id="modal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modal-title">Modal</h3>
+      <button onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- ─── Toast ─────────────────────────────────────────────────────────────── -->
+<div id="toast-container"></div>
+
+<script src="../js/db.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/app.js"></script>
+</body>
+</html>

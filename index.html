@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BuildAI — Gestão de Obras e Construção</title>
+  <meta name="description" content="Plataforma de gestão para empresas de construção. Projetos, faturas, orçamentos — tudo num só lugar.">
+  <meta name="theme-color" content="#16a34a">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
+</head>
+<body>
+
+<!-- ─── Header ───────────────────────────────────────────────────────────── -->
+<header id="header">
+  <div class="container header-inner">
+    <a class="logo" href="#">
+      <span class="logo-icon">🏗️</span>
+      BUILD<strong>AI</strong>
+    </a>
+    <nav>
+      <a href="#features">Funcionalidades</a>
+      <a href="#precos">Preços</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="header-right">
+      <a href="app/index.html" class="btn-ghost">Entrar</a>
+      <a href="app/index.html#register" class="btn-primary">Começar Grátis</a>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="document.getElementById('mobile-nav').classList.toggle('open')">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- ─── Mobile Nav ────────────────────────────────────────────────────────── -->
+<div class="mobile-nav" id="mobile-nav">
+  <button class="mobile-nav-close" onclick="document.getElementById('mobile-nav').classList.remove('open')">✕</button>
+  <a href="#features" onclick="document.getElementById('mobile-nav').classList.remove('open')">Funcionalidades</a>
+  <a href="#precos" onclick="document.getElementById('mobile-nav').classList.remove('open')">Preços</a>
+  <a href="#faq" onclick="document.getElementById('mobile-nav').classList.remove('open')">FAQ</a>
+  <a href="app/index.html" class="btn-ghost">Entrar</a>
+  <a href="app/index.html#register" class="btn-primary">Começar Grátis</a>
+</div>
+
+<!-- ─── Hero ──────────────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="container hero-inner">
+    <div class="hero-badge">Novo · Gestão Inteligente</div>
+    <h1>Gere a tua obra.<br><span class="gradient-text">Sem complicações.</span></h1>
+    <p>Projetos, orçamentos, faturas e clientes — tudo numa plataforma simples, rápida e pensada para quem trabalha em construção.</p>
+    <div class="hero-btns">
+      <a href="app/index.html#register" class="btn-primary btn-lg">Começar Grátis</a>
+      <a href="#features" class="btn-ghost btn-lg">Ver como funciona</a>
+    </div>
+    <div class="hero-proof">
+      <div class="proof-avatars">
+        <span>👷</span><span>👷</span><span>👷</span>
+      </div>
+      <p>Já usado por <strong>+500</strong> profissionais de construção</p>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="dashboard-preview">
+      <div class="preview-header">
+        <span class="preview-dot red"></span>
+        <span class="preview-dot yellow"></span>
+        <span class="preview-dot green"></span>
+        <span class="preview-title">BuildAI Dashboard</span>
+      </div>
+      <div class="preview-stats">
+        <div class="preview-stat">
+          <strong>12</strong><span>Projetos</span>
+        </div>
+        <div class="preview-stat">
+          <strong>€48.2k</strong><span>Faturado</span>
+        </div>
+        <div class="preview-stat">
+          <strong>3</strong><span>Pendentes</span>
+        </div>
+      </div>
+      <div class="preview-bars">
+        <div class="preview-bar" style="width:85%"></div>
+        <div class="preview-bar" style="width:60%"></div>
+        <div class="preview-bar" style="width:75%"></div>
+        <div class="preview-bar" style="width:40%"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Features ─────────────────────────────────────────────────────────── -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Funcionalidades</div>
+      <h2>Tudo o que precisas para gerir a tua empresa</h2>
+      <p>De pequenos reparos a grandes obras — a BuildAI adapta-se ao teu negócio</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <h3>Gestão de Projetos</h3>
+        <p>Cria e acompanha todos os teus projetos. Estado, prazo, cliente e valor — tudo organizado.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🧾</div>
+        <h3>Faturas Profissionais</h3>
+        <p>Gera faturas com o teu logo em segundos. Envia por email ou imprime diretamente.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Orçamentos Rápidos</h3>
+        <p>Cria orçamentos detalhados com materiais e mão de obra. Converte em fatura com um clique.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <h3>Gestão de Clientes</h3>
+        <p>Mantém um registo completo dos teus clientes, histórico de projetos e contactos.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>App Mobile</h3>
+        <p>Instala como app no telemóvel. Acede em obra, sem internet, com todos os dados guardados.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📈</div>
+        <h3>Relatórios</h3>
+        <p>Vê o teu desempenho mensal, projetos mais lucrativos e clientes mais ativos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Pricing ───────────────────────────────────────────────────────────── -->
+<section class="pricing" id="precos">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Preços</div>
+      <h2>Simples e transparente</h2>
+      <p>Começa grátis. Cresce quando precisares.</p>
+    </div>
+    <div class="plans-grid">
+
+      <div class="plan-card">
+        <div class="plan-name">Free</div>
+        <div class="plan-price">€0<small>/mês</small></div>
+        <p class="plan-desc">Para começar e experimentar</p>
+        <ul>
+          <li>✓ 3 projetos ativos</li>
+          <li>✓ 5 faturas/mês</li>
+          <li>✓ 3 clientes</li>
+          <li>✓ Orçamentos básicos</li>
+          <li>✗ Exportar PDF</li>
+          <li>✗ Relatórios</li>
+          <li>✗ Suporte prioritário</li>
+        </ul>
+        <a href="app/index.html#register" class="btn-plan">Começar Grátis</a>
+      </div>
+
+      <div class="plan-card featured">
+        <div class="plan-badge">Mais Popular</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">€9.99<small>/mês</small></div>
+        <p class="plan-desc">Para profissionais a crescer</p>
+        <ul>
+          <li>✓ Projetos ilimitados</li>
+          <li>✓ Faturas ilimitadas</li>
+          <li>✓ Clientes ilimitados</li>
+          <li>✓ Orçamentos completos</li>
+          <li>✓ Exportar PDF</li>
+          <li>✓ Relatórios mensais</li>
+          <li>✗ Suporte prioritário</li>
+        </ul>
+        <a href="app/index.html#register" class="btn-plan btn-plan-featured">Começar Pro</a>
+      </div>
+
+      <div class="plan-card">
+        <div class="plan-name">Business</div>
+        <div class="plan-price">€24.99<small>/mês</small></div>
+        <p class="plan-desc">Para empresas estabelecidas</p>
+        <ul>
+          <li>✓ Tudo do Pro</li>
+          <li>✓ Multi-utilizador (5)</li>
+          <li>✓ Logo personalizado</li>
+          <li>✓ API de integração</li>
+          <li>✓ Relatórios avançados</li>
+          <li>✓ Suporte prioritário</li>
+          <li>✓ Onboarding personalizado</li>
+        </ul>
+        <a href="app/index.html#register" class="btn-plan">Começar Business</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── FAQ ───────────────────────────────────────────────────────────────── -->
+<section class="faq" id="faq">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">FAQ</div>
+      <h2>Perguntas frequentes</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Preciso de instalar alguma coisa? <span>+</span></button>
+        <div class="faq-a">Não. A BuildAI funciona diretamente no browser. Podes também instalar como app no telemóvel sem ir à App Store.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Os meus dados estão seguros? <span>+</span></button>
+        <div class="faq-a">Sim. Os dados ficam guardados no teu dispositivo. Não partilhamos informação com terceiros.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Posso cancelar quando quiser? <span>+</span></button>
+        <div class="faq-a">Sim, sem compromisso. Cancelas a qualquer momento e passas para o plano Free.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Funciona em tablet e telemóvel? <span>+</span></button>
+        <div class="faq-a">Sim, o design é totalmente responsivo e funciona em qualquer dispositivo.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CTA ───────────────────────────────────────────────────────────────── -->
+<section class="cta">
+  <div class="container cta-inner">
+    <h2>Pronto para organizar a tua obra?</h2>
+    <p>Regista-te agora, é grátis. Sem cartão de crédito.</p>
+    <a href="app/index.html#register" class="btn-primary btn-lg">Criar Conta Grátis</a>
+  </div>
+</section>
+
+<!-- ─── Footer ────────────────────────────────────────────────────────────── -->
+<footer>
+  <div class="container footer-inner">
+    <div>
+      <span class="footer-logo">BUILD<strong>AI</strong></span>
+      <p>Gestão de obras simples e inteligente para profissionais de construção.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Produto</h4>
+      <ul>
+        <li><a href="#features">Funcionalidades</a></li>
+        <li><a href="#precos">Preços</a></li>
+        <li><a href="app/index.html">Entrar</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="#">Termos de Uso</a></li>
+        <li><a href="#">Privacidade</a></li>
+        <li><a href="#">Contacto</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <p>© <span id="year"></span> BuildAI. Todos os direitos reservados.</p>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+  window.addEventListener('scroll', () => {
+    document.getElementById('header').classList.toggle('solid', window.scrollY > 50);
+  });
+  function toggleFaq(btn) {
+    const item = btn.parentElement;
+    item.classList.toggle('open');
+    btn.querySelector('span').textContent = item.classList.contains('open') ? '−' : '+';
+  }
+</script>
+</body>
+</html>
