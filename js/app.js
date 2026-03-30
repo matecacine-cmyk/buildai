@@ -4,10 +4,10 @@ const App = {
     document.querySelectorAll('.nav-item').forEach(el => {
       el.classList.toggle('active', el.dataset.page === page);
     });
-    const titles = { dashboard:'Dashboard', projects:'Projetos', quotes:'Orçamentos', invoices:'Faturas', clients:'Clientes', settings:'Definições' };
+    const titles = { dashboard:'Dashboard', projects:'Projetos', quotes:'Orçamentos', invoices:'Faturas', clients:'Clientes', settings:'Definições', statistics:'Estatísticas' };
     document.getElementById('page-title').textContent = titles[page] || page;
     document.getElementById('sidebar').classList.remove('open');
-    const pages = { dashboard: Pages.dashboard, projects: Pages.projects, quotes: Pages.quotes, invoices: Pages.invoices, clients: Pages.clients, settings: Pages.settings };
+    const pages = { dashboard: Pages.dashboard, projects: Pages.projects, quotes: Pages.quotes, invoices: Pages.invoices, clients: Pages.clients, settings: Pages.settings, statistics: Pages.statistics };
     if (pages[page]) pages[page]();
   },
 
@@ -568,6 +568,326 @@ const Pages = {
     DB.deleteQuote(id);
     App.toast('Orçamento apagado.', '');
     Pages.quotes();
+  },
+
+  // ── Statistics ──
+  statistics() {
+    const uid = App.uid();
+    const invoices = DB.getInvoices(uid);
+    const quotes = DB.getQuotes(uid);
+    const projects = DB.getProjects(uid);
+    const clients = DB.getClients(uid);
+
+    // Totals
+    const paid    = invoices.filter(i => i.status === 'pago');
+    const pending = invoices.filter(i => i.status === 'pendente');
+    const overdue = invoices.filter(i => {
+      if (i.status !== 'pendente') return false;
+      const d = new Date(i.date); d.setDate(d.getDate() + 30);
+      return d < new Date();
+    });
+    const cancelled = invoices.filter(i => i.status === 'cancelado');
+
+    const totalPaid    = paid.reduce((s,i) => s + Number(i.total||0), 0);
+    const totalPending = pending.reduce((s,i) => s + Number(i.total||0), 0);
+    const totalOverdue = overdue.reduce((s,i) => s + Number(i.total||0), 0);
+    const totalAll     = invoices.reduce((s,i) => s + Number(i.total||0), 0);
+    const avgInvoice   = invoices.length ? totalAll / invoices.length : 0;
+    const payRate      = invoices.length ? Math.round((paid.length / invoices.length) * 100) : 0;
+
+    // Monthly revenue — last 12 months
+    const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const now = new Date();
+    const monthlyData = Array.from({length: 12}, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
+      return { label: months[d.getMonth()], year: d.getFullYear(), month: d.getMonth(), paid: 0, pending: 0 };
+    });
+    invoices.forEach(inv => {
+      if (!inv.date) return;
+      const d = new Date(inv.date);
+      const slot = monthlyData.find(m => m.month === d.getMonth() && m.year === d.getFullYear());
+      if (!slot) return;
+      if (inv.status === 'pago') slot.paid += Number(inv.total||0);
+      else if (inv.status === 'pendente') slot.pending += Number(inv.total||0);
+    });
+
+    // Top clients
+    const clientTotals = {};
+    paid.forEach(inv => {
+      if (!inv.client) return;
+      clientTotals[inv.client] = (clientTotals[inv.client] || 0) + Number(inv.total||0);
+    });
+    const topClients = Object.entries(clientTotals).sort((a,b) => b[1]-a[1]).slice(0, 5);
+    const maxClientVal = topClients[0]?.[1] || 1;
+
+    // Quotes conversion
+    const quotesApproved = quotes.filter(q => q.status === 'aprovado').length;
+    const quoteRate = quotes.length ? Math.round((quotesApproved / quotes.length) * 100) : 0;
+
+    Pages.set(`
+      <div class="page-content stats-page">
+
+        <!-- KPI row -->
+        <div class="stats-kpi-grid">
+          <div class="stat-kpi green">
+            <div class="stat-kpi-icon">💶</div>
+            <div class="stat-kpi-val">${App.fmt(totalPaid)}</div>
+            <div class="stat-kpi-label">Total Recebido</div>
+            <div class="stat-kpi-sub">${paid.length} fatura${paid.length!==1?'s':''} paga${paid.length!==1?'s':''}</div>
+          </div>
+          <div class="stat-kpi yellow">
+            <div class="stat-kpi-icon">⏳</div>
+            <div class="stat-kpi-val">${App.fmt(totalPending)}</div>
+            <div class="stat-kpi-label">Por Receber</div>
+            <div class="stat-kpi-sub">${pending.length} pendente${pending.length!==1?'s':''}</div>
+          </div>
+          <div class="stat-kpi red">
+            <div class="stat-kpi-icon">⚠️</div>
+            <div class="stat-kpi-val">${App.fmt(totalOverdue)}</div>
+            <div class="stat-kpi-label">Em Atraso</div>
+            <div class="stat-kpi-sub">${overdue.length} fatura${overdue.length!==1?'s':''} vencida${overdue.length!==1?'s':''}</div>
+          </div>
+          <div class="stat-kpi">
+            <div class="stat-kpi-icon">📊</div>
+            <div class="stat-kpi-val">${App.fmt(avgInvoice)}</div>
+            <div class="stat-kpi-label">Fatura Média</div>
+            <div class="stat-kpi-sub">${invoices.length} fatura${invoices.length!==1?'s':''} no total</div>
+          </div>
+        </div>
+
+        <!-- Charts row 1 -->
+        <div class="stats-row">
+          <!-- Monthly revenue bar chart -->
+          <div class="stats-card stats-card-wide">
+            <div class="stats-card-header">
+              <h3>Receita Mensal</h3>
+              <div class="stats-legend">
+                <span class="legend-dot green"></span>Recebido
+                <span class="legend-dot yellow" style="margin-left:12px"></span>Pendente
+              </div>
+            </div>
+            <canvas id="chart-monthly" class="stats-canvas" height="200"></canvas>
+          </div>
+
+          <!-- Invoice status donut -->
+          <div class="stats-card">
+            <div class="stats-card-header"><h3>Faturas por Estado</h3></div>
+            <div class="donut-wrap">
+              <canvas id="chart-donut" width="160" height="160"></canvas>
+              <div class="donut-center">
+                <strong>${invoices.length}</strong>
+                <span>faturas</span>
+              </div>
+            </div>
+            <div class="donut-legend-list">
+              ${[
+                {label:'Pagas', count:paid.length, color:'#16a34a'},
+                {label:'Pendentes', count:pending.length, color:'#eab308'},
+                {label:'Em Atraso', count:overdue.length, color:'#ef4444'},
+                {label:'Canceladas', count:cancelled.length, color:'#6b7280'},
+              ].map(s => `
+                <div class="donut-leg-item">
+                  <div class="donut-leg-dot" style="background:${s.color}"></div>
+                  <span>${s.label}</span>
+                  <strong>${s.count}</strong>
+                  <span class="donut-leg-pct">${invoices.length ? Math.round(s.count/invoices.length*100) : 0}%</span>
+                </div>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts row 2 -->
+        <div class="stats-row">
+          <!-- Top clients -->
+          <div class="stats-card">
+            <div class="stats-card-header"><h3>Top Clientes</h3><span class="stats-tag">por receita recebida</span></div>
+            ${topClients.length === 0
+              ? '<p class="empty-hint" style="padding:20px">Sem dados ainda.</p>'
+              : `<div class="top-clients-list">
+                  ${topClients.map(([name, val]) => `
+                    <div class="top-client-item">
+                      <div class="top-client-avatar">${name[0].toUpperCase()}</div>
+                      <div class="top-client-info">
+                        <strong>${name}</strong>
+                        <div class="top-client-bar-wrap">
+                          <div class="top-client-bar" style="width:${Math.round(val/maxClientVal*100)}%"></div>
+                        </div>
+                      </div>
+                      <span class="top-client-val">${App.fmt(val)}</span>
+                    </div>`).join('')}
+                </div>`}
+          </div>
+
+          <!-- Summary metrics -->
+          <div class="stats-card">
+            <div class="stats-card-header"><h3>Resumo Geral</h3></div>
+            <div class="summary-metrics">
+              <div class="summary-row">
+                <span>Taxa de Pagamento</span>
+                <div class="summary-bar-wrap">
+                  <div class="summary-bar" style="width:${payRate}%;background:var(--green)"></div>
+                </div>
+                <strong>${payRate}%</strong>
+              </div>
+              <div class="summary-row">
+                <span>Taxa de Conversão Orçamentos</span>
+                <div class="summary-bar-wrap">
+                  <div class="summary-bar" style="width:${quoteRate}%;background:var(--gold)"></div>
+                </div>
+                <strong>${quoteRate}%</strong>
+              </div>
+              <div class="summary-divider"></div>
+              <div class="metric-grid">
+                <div class="metric-item"><strong>${projects.filter(p=>p.status==='ativo').length}</strong><span>Projetos Ativos</span></div>
+                <div class="metric-item"><strong>${projects.filter(p=>p.status==='concluído').length}</strong><span>Concluídos</span></div>
+                <div class="metric-item"><strong>${quotes.length}</strong><span>Orçamentos</span></div>
+                <div class="metric-item"><strong>${quotesApproved}</strong><span>Aprovados</span></div>
+                <div class="metric-item"><strong>${clients.length}</strong><span>Clientes</span></div>
+                <div class="metric-item"><strong>${App.fmt(totalAll)}</strong><span>Faturado Total</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quotes pipeline -->
+          <div class="stats-card">
+            <div class="stats-card-header"><h3>Pipeline de Orçamentos</h3></div>
+            ${quotes.length === 0
+              ? '<p class="empty-hint" style="padding:20px">Sem orçamentos ainda.</p>'
+              : `<div class="pipeline-list">
+                  ${[
+                    {label:'Aprovados', items: quotes.filter(q=>q.status==='aprovado'), color:'#16a34a'},
+                    {label:'Enviados', items: quotes.filter(q=>q.status==='enviado'), color:'#eab308'},
+                    {label:'Recusados', items: quotes.filter(q=>q.status==='recusado'), color:'#ef4444'},
+                  ].map(g => `
+                    <div class="pipeline-group">
+                      <div class="pipeline-header">
+                        <span class="pipeline-dot" style="background:${g.color}"></span>
+                        <strong>${g.label}</strong>
+                        <span class="pipeline-count">${g.items.length}</span>
+                        <span class="pipeline-total">${App.fmt(g.items.reduce((s,q)=>s+Number(q.total||0),0))}</span>
+                      </div>
+                      ${g.items.slice(0,3).map(q=>`
+                        <div class="pipeline-item" onclick="Pages.editQuote('${q.id}')">
+                          <span>${q.title}</span>
+                          <strong>${App.fmt(q.total)}</strong>
+                        </div>`).join('')}
+                    </div>`).join('')}
+                </div>`}
+          </div>
+        </div>
+
+        <!-- Invoice list with overdue highlight -->
+        ${overdue.length > 0 ? `
+          <div class="stats-card stats-alert-card">
+            <div class="stats-card-header">
+              <h3>⚠️ Faturas em Atraso</h3>
+              <span class="stats-tag red">${overdue.length} vencida${overdue.length!==1?'s':''}</span>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>#</th><th>Cliente</th><th>Data</th><th>Total</th><th>Dias Atraso</th><th></th></tr></thead>
+                <tbody>
+                  ${overdue.map(inv => {
+                    const due = new Date(inv.date); due.setDate(due.getDate()+30);
+                    const days = Math.floor((new Date()-due)/(1000*60*60*24));
+                    return `<tr>
+                      <td><strong>#${inv.number}</strong></td>
+                      <td>${inv.client||'—'}</td>
+                      <td>${inv.date||'—'}</td>
+                      <td><strong>${App.fmt(inv.total)}</strong></td>
+                      <td><span class="badge-overdue">${days}d</span></td>
+                      <td class="actions">
+                        <button onclick="Pages.viewInvoice('${inv.id}')" title="Ver">👁️</button>
+                      </td>
+                    </tr>`;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>` : ''}
+
+      </div>
+    `);
+
+    // Draw charts
+    setTimeout(() => {
+      // Bar chart — monthly revenue
+      const canvas = document.getElementById('chart-monthly');
+      if (canvas) {
+        const dpr = window.devicePixelRatio || 1;
+        const W = canvas.offsetWidth;
+        const H = 200;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.height = H + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        const PAD = {top:16, right:16, bottom:32, left:56};
+        const cW = W - PAD.left - PAD.right;
+        const cH = H - PAD.top - PAD.bottom;
+        const maxV = Math.max(...monthlyData.map(m => m.paid + m.pending)) * 1.1 || 1;
+        const barGroup = cW / monthlyData.length;
+        const barW = barGroup * 0.35;
+
+        // Grid
+        ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+        for (let i = 0; i <= 4; i++) {
+          const y = PAD.top + cH - (i/4)*cH;
+          ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left+cW, y); ctx.stroke();
+          ctx.fillStyle = 'rgba(134,239,172,0.5)';
+          ctx.font = '10px Helvetica Neue'; ctx.textAlign = 'right';
+          ctx.fillText('€'+(maxV/4*i).toFixed(0), PAD.left-6, y+4);
+        }
+
+        monthlyData.forEach((m, i) => {
+          const x = PAD.left + i * barGroup + barGroup * 0.1;
+          // Paid bar
+          const paidH = (m.paid/maxV)*cH;
+          ctx.fillStyle = '#16a34a';
+          ctx.beginPath();
+          ctx.roundRect(x, PAD.top+cH-paidH, barW, paidH, [3,3,0,0]);
+          ctx.fill();
+          // Pending bar
+          const pendH = (m.pending/maxV)*cH;
+          ctx.fillStyle = '#eab308';
+          ctx.beginPath();
+          ctx.roundRect(x+barW+2, PAD.top+cH-pendH, barW, pendH, [3,3,0,0]);
+          ctx.fill();
+          // Label
+          ctx.fillStyle = 'rgba(134,239,172,0.5)';
+          ctx.font = '10px Helvetica Neue'; ctx.textAlign = 'center';
+          ctx.fillText(m.label, x+barW, H-PAD.bottom+14);
+        });
+      }
+
+      // Donut — invoice status
+      const dc = document.getElementById('chart-donut');
+      if (dc) {
+        const dpr = window.devicePixelRatio || 1;
+        dc.width = 160*dpr; dc.height = 160*dpr;
+        dc.style.width = '160px'; dc.style.height = '160px';
+        const ctx = dc.getContext('2d');
+        ctx.scale(dpr, dpr);
+        const segs = [
+          {val:paid.length, color:'#16a34a'},
+          {val:pending.length, color:'#eab308'},
+          {val:overdue.length, color:'#ef4444'},
+          {val:cancelled.length, color:'#374151'},
+        ].filter(s => s.val > 0);
+        const total = segs.reduce((s,x)=>s+x.val,0) || 1;
+        let angle = -Math.PI/2;
+        const cx=80, cy=80, r=70, inner=48;
+        segs.forEach(s => {
+          const sweep = (s.val/total)*Math.PI*2;
+          ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,angle,angle+sweep); ctx.closePath();
+          ctx.fillStyle = s.color; ctx.fill();
+          angle += sweep;
+        });
+        ctx.beginPath(); ctx.arc(cx,cy,inner,0,Math.PI*2);
+        ctx.fillStyle = '#0f170f'; ctx.fill();
+      }
+    }, 80);
   },
 
   // ── Settings ──
