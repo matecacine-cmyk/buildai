@@ -26,6 +26,11 @@ const App = {
   uid() { return Auth.current.id; },
 };
 
+// ─── HTML escape (XSS prevention) ────────────────────────────────────────────
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 // ─── Modal ────────────────────────────────────────────────────────────────────
 function openModal(title, html) {
   document.getElementById('modal-title').textContent = title;
@@ -145,7 +150,7 @@ const Pages = {
           ? '<div class="empty-state"><div class="empty-icon">📋</div><p>Sem projetos ainda.</p><button class="btn-primary" onclick="Pages.newProject()">Criar Primeiro Projeto</button></div>'
           : `<div class="table-wrap"><table class="data-table">
               <thead><tr><th>Nome</th><th>Cliente</th><th>Valor</th><th>Estado</th><th>Data</th><th></th></tr></thead>
-              <tbody>${list.reverse().map(p => `
+              <tbody>${list.slice().reverse().map(p => `
                 <tr>
                   <td><strong>${p.name}</strong>${p.desc ? `<br><small>${p.desc}</small>` : ''}</td>
                   <td>${p.client || '—'}</td>
@@ -217,11 +222,11 @@ const Pages = {
     const clients = DB.getClients(App.uid());
     openModal('Editar Projeto', `
       <div class="form-grid">
-        <div class="form-group full"><label>Nome *</label><input id="p-name" value="${p.name}"></div>
+        <div class="form-group full"><label>Nome *</label><input id="p-name" value="${esc(p.name)}"></div>
         <div class="form-group"><label>Cliente</label>
           <select id="p-client">
             <option value="">Sem cliente</option>
-            ${clients.map(c => `<option value="${c.name}" ${c.name === p.client ? 'selected' : ''}>${c.name}</option>`).join('')}
+            ${clients.map(c => `<option value="${esc(c.name)}" ${c.name === p.client ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}
           </select>
         </div>
         <div class="form-group"><label>Valor (€)</label><input id="p-value" type="number" value="${p.value || ''}"></div>
@@ -231,7 +236,7 @@ const Pages = {
             ${['ativo','concluído','pausado'].map(s => `<option value="${s}" ${s === p.status ? 'selected' : ''}>${s}</option>`).join('')}
           </select>
         </div>
-        <div class="form-group full"><label>Descrição</label><textarea id="p-desc" rows="3">${p.desc || ''}</textarea></div>
+        <div class="form-group full"><label>Descrição</label><textarea id="p-desc" rows="3">${esc(p.desc || '')}</textarea></div>
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
@@ -307,11 +312,11 @@ const Pages = {
     if (!c) return;
     openModal('Editar Cliente', `
       <div class="form-grid">
-        <div class="form-group full"><label>Nome *</label><input id="c-name" value="${c.name}"></div>
-        <div class="form-group"><label>Email</label><input id="c-email" type="email" value="${c.email || ''}"></div>
-        <div class="form-group"><label>Telefone</label><input id="c-phone" value="${c.phone || ''}"></div>
-        <div class="form-group full"><label>Morada</label><input id="c-address" value="${c.address || ''}"></div>
-        <div class="form-group"><label>NIF</label><input id="c-nif" value="${c.nif || ''}"></div>
+        <div class="form-group full"><label>Nome *</label><input id="c-name" value="${esc(c.name)}"></div>
+        <div class="form-group"><label>Email</label><input id="c-email" type="email" value="${esc(c.email || '')}"></div>
+        <div class="form-group"><label>Telefone</label><input id="c-phone" value="${esc(c.phone || '')}"></div>
+        <div class="form-group full"><label>Morada</label><input id="c-address" value="${esc(c.address || '')}"></div>
+        <div class="form-group"><label>NIF</label><input id="c-nif" value="${esc(c.nif || '')}"></div>
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
@@ -339,14 +344,14 @@ const Pages = {
         </div>
         <div class="invoice-summary">
           <div class="inv-sum-item"><strong>${App.fmt(list.filter(i=>i.status==='pago').reduce((s,i)=>s+Number(i.total||0),0))}</strong><span>Recebido</span></div>
-          <div class="inv-sum-item yellow"><strong>${App.fmt(list.filter(i=>i.status==='pendente').reduce((s,i)=>s+Number(i.total||0),0))}</strong><span>Pendente</span></div>
+          <div class="inv-sum-item yellow"><strong>${App.fmt(list.filter(i=>i.status==='pendente').reduce((s,i)=>s+Number(i.total||0),0))}</strong><span>Por Receber</span></div>
           <div class="inv-sum-item"><strong>${App.fmt(total)}</strong><span>Total</span></div>
         </div>
         ${list.length === 0
           ? '<div class="empty-state"><div class="empty-icon">🧾</div><p>Sem faturas ainda.</p><button class="btn-primary" onclick="Pages.newInvoice()">Criar Fatura</button></div>'
           : `<div class="table-wrap"><table class="data-table">
               <thead><tr><th>#</th><th>Cliente</th><th>Data</th><th>Total</th><th>Estado</th><th></th></tr></thead>
-              <tbody>${list.reverse().map(i => `
+              <tbody>${list.slice().reverse().map(i => `
                 <tr>
                   <td><strong>#${i.number}</strong></td>
                   <td>${i.client || '—'}</td>
@@ -374,7 +379,8 @@ const Pages = {
   newInvoice() {
     const clients = DB.getClients(App.uid());
     const invoices = DB.getInvoices(App.uid());
-    const nextNum = (invoices.length + 1).toString().padStart(4, '0');
+    const maxNum = invoices.reduce((m, i) => Math.max(m, parseInt(i.number) || 0), 0);
+    const nextNum = (maxNum + 1).toString().padStart(4, '0');
     const today = new Date().toISOString().split('T')[0];
     openModal('Nova Fatura', `
       <div class="form-grid">
@@ -424,6 +430,7 @@ const Pages = {
     inv.status = status;
     DB.saveInvoice(inv);
     App.toast('Estado atualizado!', 'success');
+    Pages.invoices();
   },
 
   viewInvoice(id) {
@@ -471,13 +478,14 @@ const Pages = {
           ? '<div class="empty-state"><div class="empty-icon">📊</div><p>Sem orçamentos ainda.</p><button class="btn-primary" onclick="Pages.newQuote()">Criar Orçamento</button></div>'
           : `<div class="table-wrap"><table class="data-table">
               <thead><tr><th>Título</th><th>Cliente</th><th>Total</th><th>Estado</th><th></th></tr></thead>
-              <tbody>${list.reverse().map(q => `
+              <tbody>${list.slice().reverse().map(q => `
                 <tr>
-                  <td><strong>${q.title}</strong></td>
-                  <td>${q.client || '—'}</td>
+                  <td><strong>${esc(q.title)}</strong></td>
+                  <td>${esc(q.client || '—')}</td>
                   <td><strong>${App.fmt(q.total)}</strong></td>
                   <td><span class="status-badge ${q.status}">${q.status}</span></td>
                   <td class="actions">
+                    ${q.status === 'aprovado' ? `<button onclick="Pages.convertQuoteToInvoice('${q.id}')" title="Converter em Fatura" class="btn-convert">🧾</button>` : ''}
                     <button onclick="Pages.editQuote('${q.id}')" title="Editar">✏️</button>
                     <button onclick="Pages.deleteQuote('${q.id}')" title="Apagar">🗑️</button>
                   </td>
@@ -538,14 +546,14 @@ const Pages = {
     const clients = DB.getClients(App.uid());
     openModal('Editar Orçamento', `
       <div class="form-grid">
-        <div class="form-group full"><label>Título *</label><input id="q-title" value="${q.title}"></div>
+        <div class="form-group full"><label>Título *</label><input id="q-title" value="${esc(q.title)}"></div>
         <div class="form-group full"><label>Cliente</label>
           <select id="q-client">
             <option value="">Sem cliente</option>
-            ${clients.map(c => `<option value="${c.name}" ${c.name===q.client?'selected':''}>${c.name}</option>`).join('')}
+            ${clients.map(c => `<option value="${esc(c.name)}" ${c.name===q.client?'selected':''}>${esc(c.name)}</option>`).join('')}
           </select>
         </div>
-        <div class="form-group full"><label>Descrição</label><textarea id="q-desc" rows="5">${q.desc||''}</textarea></div>
+        <div class="form-group full"><label>Descrição</label><textarea id="q-desc" rows="5">${esc(q.desc||'')}</textarea></div>
         <div class="form-group"><label>Mão de Obra (€)</label><input id="q-labor" type="number" value="${q.labor||''}" oninput="calcQuote()"></div>
         <div class="form-group"><label>Materiais (€)</label><input id="q-materials" type="number" value="${q.materials||''}" oninput="calcQuote()"></div>
         <div class="form-group"><label>Total (€)</label><input id="q-total" type="number" value="${q.total||''}" readonly></div>
@@ -558,6 +566,7 @@ const Pages = {
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
+        ${q.status === 'aprovado' ? `<button class="btn-success" onclick="closeModal();Pages.convertQuoteToInvoice('${id}')">Converter em Fatura</button>` : ''}
         <button class="btn-primary" onclick="Pages.saveQuote('${id}')">Guardar</button>
       </div>
     `);
@@ -570,6 +579,35 @@ const Pages = {
     Pages.quotes();
   },
 
+  convertQuoteToInvoice(id) {
+    const q = DB.getQuotes(App.uid()).find(x => x.id === id);
+    if (!q) return;
+    const invoices = DB.getInvoices(App.uid());
+    const maxNum = invoices.reduce((m, i) => Math.max(m, parseInt(i.number) || 0), 0);
+    const nextNum = (maxNum + 1).toString().padStart(4, '0');
+    const today = new Date().toISOString().split('T')[0];
+    const sub = q.total;
+    const iva = 23;
+    const total = sub + (sub * iva / 100);
+    const inv = {
+      id: DB.newId(), userId: App.uid(),
+      number: nextNum,
+      date: today,
+      client: q.client,
+      desc: q.desc,
+      subtotal: sub, iva, total,
+      status: 'pendente',
+      fromQuote: q.id,
+      createdAt: new Date().toISOString(),
+    };
+    DB.saveInvoice(inv);
+    // mark quote as converted
+    q.status = 'convertido';
+    DB.saveQuote(q);
+    App.toast('Fatura #' + nextNum + ' criada!', 'success');
+    App.goto('invoices');
+  },
+
   // ── Statistics ──
   statistics() {
     const uid = App.uid();
@@ -580,12 +618,13 @@ const Pages = {
 
     // Totals
     const paid    = invoices.filter(i => i.status === 'pago');
-    const pending = invoices.filter(i => i.status === 'pendente');
     const overdue = invoices.filter(i => {
       if (i.status !== 'pendente') return false;
       const d = new Date(i.date); d.setDate(d.getDate() + 30);
       return d < new Date();
     });
+    const overdueIds = new Set(overdue.map(i => i.id));
+    const pending = invoices.filter(i => i.status === 'pendente' && !overdueIds.has(i.id));
     const cancelled = invoices.filter(i => i.status === 'cancelado');
 
     const totalPaid    = paid.reduce((s,i) => s + Number(i.total||0), 0);

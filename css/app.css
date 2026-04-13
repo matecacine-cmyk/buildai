@@ -147,6 +147,11 @@ input, select, textarea { font: inherit; }
 .status-badge.pendente, .status-badge.enviado { background: rgba(234,179,8,0.15); color: var(--gold); }
 .status-badge.pausado, .status-badge.recusado, .status-badge.cancelado { background: rgba(248,113,113,0.1); color: #f87171; }
 .status-badge.concluído { background: rgba(99,102,241,0.15); color: #818cf8; }
+.status-badge.convertido { background: rgba(14,165,233,0.15); color: #38bdf8; }
+.btn-success { display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px; border-radius: 8px; background: linear-gradient(135deg,#16a34a,#15803d); color: #fff; font-weight: 700; font-size: 0.88rem; transition: opacity 0.2s; }
+.btn-success:hover { opacity: 0.88; }
+.btn-convert { padding: 4px 8px; border-radius: 6px; background: rgba(22,163,74,0.15); color: #4ade80; font-size: 0.85rem; border: 1px solid rgba(22,163,74,0.3); transition: all 0.2s; }
+.btn-convert:hover { background: rgba(22,163,74,0.3); }
 .status-select { padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); font-size: 0.78rem; cursor: pointer; }
 
 /* ─── Table ───────────────────────────────────────────────────────────────── */
